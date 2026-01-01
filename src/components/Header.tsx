@@ -132,7 +132,7 @@ export function Header() {
                       key={drama.bookId}
                       to={`/detail/${drama.bookId}`}
                       onClick={handleSearchClose}
-                      className="flex gap-4 p-4 rounded-2xl glass hover:bg-muted/30 transition-all text-left animate-fade-up"
+                      className="flex gap-4 p-4 rounded-2xl bg-card hover:bg-muted transition-all text-left animate-fade-up"
                       style={{ animationDelay: `${index * 50}ms` }}
                     >
                       <img
