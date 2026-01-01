@@ -95,10 +95,10 @@ export function Header() {
 
       {/* Search Overlay */}
       {searchOpen && (
-        <div className="fixed inset-0 bg-background z-50 animate-fade-up">
-          <div className="container mx-auto px-4 py-6">
-            <div className="flex items-center gap-4 mb-6">
-              <div className="flex-1 relative">
+        <div className="fixed inset-0 bg-background z-50 overflow-hidden">
+          <div className="container mx-auto px-4 py-6 h-[100dvh] flex flex-col">
+            <div className="flex items-center gap-4 mb-6 flex-shrink-0">
+              <div className="flex-1 relative min-w-0">
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                 <input
                   type="text"
@@ -111,14 +111,14 @@ export function Header() {
               </div>
               <button
                 onClick={handleSearchClose}
-                className="p-3 rounded-xl hover:bg-muted/50 transition-colors"
+                className="p-3 rounded-xl hover:bg-muted/50 transition-colors flex-shrink-0"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             {/* Search Results */}
-            <div className="max-h-[calc(100vh-140px)] overflow-y-auto">
+            <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden">
               {isSearching && debouncedQuery && (
                 <div className="flex items-center justify-center py-12">
                   <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
@@ -132,22 +132,19 @@ export function Header() {
                       key={drama.bookId}
                       to={`/detail/${drama.bookId}`}
                       onClick={handleSearchClose}
-                      className="flex gap-4 p-4 rounded-2xl bg-card hover:bg-muted transition-all text-left animate-fade-up"
+                      className="flex gap-4 p-4 rounded-2xl bg-card hover:bg-muted transition-all text-left animate-fade-up overflow-hidden"
                       style={{ animationDelay: `${index * 50}ms` }}
                     >
                       <img
                         src={drama.cover}
                         alt={drama.bookName}
                         className="w-16 h-24 object-cover rounded-xl flex-shrink-0"
+                        loading="lazy"
                       />
                       <div className="flex-1 min-w-0">
-                        <h3 className="font-display font-semibold text-foreground truncate">
-                          {drama.bookName}
-                        </h3>
+                        <h3 className="font-display font-semibold text-foreground truncate">{drama.bookName}</h3>
                         {drama.protagonist && (
-                          <p className="text-sm text-muted-foreground mt-1">
-                            {drama.protagonist}
-                          </p>
+                          <p className="text-sm text-muted-foreground mt-1 truncate">{drama.protagonist}</p>
                         )}
                         <p className="text-sm text-muted-foreground line-clamp-2 mt-2">
                           {drama.introduction}
@@ -169,18 +166,14 @@ export function Header() {
 
               {searchResults && searchResults.length === 0 && debouncedQuery && (
                 <div className="text-center py-12">
-                  <p className="text-muted-foreground">
-                    Tidak ada hasil untuk "{debouncedQuery}"
-                  </p>
+                  <p className="text-muted-foreground">Tidak ada hasil untuk "{debouncedQuery}"</p>
                 </div>
               )}
 
               {!debouncedQuery && (
                 <div className="text-center py-12">
                   <Search className="w-12 h-12 text-muted-foreground/50 mx-auto mb-4" />
-                  <p className="text-muted-foreground">
-                    Ketik untuk mencari drama
-                  </p>
+                  <p className="text-muted-foreground">Ketik untuk mencari drama</p>
                 </div>
               )}
             </div>

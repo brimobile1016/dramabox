@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useMemo, useState, useEffect, useRef } from "react";
 import { useParams, Link, useSearchParams } from "react-router-dom";
 import { useDramaDetail, useEpisodes } from "@/hooks/useDramaDetail";
 import { ChevronLeft, ChevronRight, Play, Loader2, Settings } from "lucide-react";
@@ -13,6 +13,7 @@ export default function Watch() {
   const [currentPage, setCurrentPage] = useState(0);
   const [quality, setQuality] = useState(720);
   const [showQualityMenu, setShowQualityMenu] = useState(false);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
 
   const { data: detailData, isLoading: detailLoading } = useDramaDetail(bookId || "");
   const { data: episodes, isLoading: episodesLoading } = useEpisodes(bookId || "");
@@ -38,13 +39,17 @@ export default function Watch() {
         <div className="max-w-7xl mx-auto flex flex-col items-center justify-center py-32">
           <div className="relative">
             <div className="w-20 h-20 rounded-full border-4 border-muted border-t-primary animate-spin" />
-            <div className="absolute inset-0 w-20 h-20 rounded-full border-4 border-transparent border-r-secondary animate-spin" style={{ animationDirection: 'reverse', animationDuration: '1.5s' }} />
+            <div
+              className="absolute inset-0 w-20 h-20 rounded-full border-4 border-transparent border-r-secondary animate-spin"
+              style={{ animationDirection: "reverse", animationDuration: "1.5s" }}
+            />
           </div>
           <h2 className="text-xl font-bold text-foreground mt-8 mb-2 gradient-text">
             Sedang Memuat Drama
           </h2>
           <p className="text-muted-foreground text-center max-w-md">
-            Mohon tunggu sebentar, kami sedang menyiapkan {detailData?.data?.book?.chapterCount || 'semua'} episode untukmu...
+            Mohon tunggu sebentar, kami sedang menyiapkan{" "}
+            {detailData?.data?.book?.chapterCount || "semua"} episode untukmu...
           </p>
         </div>
       </main>
@@ -66,18 +71,52 @@ export default function Watch() {
 
   const { book } = detailData.data;
   const currentEpisodeData = episodes[currentEpisode];
-  
+
+  const defaultCdn = useMemo(() => {
+    if (!currentEpisodeData) return null;
+    return (
+      currentEpisodeData.cdnList.find((cdn) => cdn.isDefault === 1) || currentEpisodeData.cdnList[0] || null
+    );
+  }, [currentEpisodeData]);
+
+  const availableQualities = useMemo(() => {
+    const list = defaultCdn?.videoPathList
+      ?.filter((v) => v.isVipEquity === 0)
+      .map((v) => v.quality)
+      .filter((q): q is number => typeof q === "number");
+
+    const unique = Array.from(new Set(list && list.length ? list : [720]));
+    // Sort descending so 1080p appears on top when available.
+    return unique.sort((a, b) => b - a);
+  }, [defaultCdn]);
+
+  // Keep selected quality valid for the current episode; prefer the highest (e.g. 1080p).
+  useEffect(() => {
+    if (!availableQualities.length) return;
+    if (!availableQualities.includes(quality)) {
+      setQuality(availableQualities[0]);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [availableQualities.join(",")]);
+
   // Get video URL with selected quality
   const getVideoUrl = () => {
-    if (!currentEpisodeData) return "";
-    const defaultCdn = currentEpisodeData.cdnList.find((cdn) => cdn.isDefault === 1) || currentEpisodeData.cdnList[0];
-    if (!defaultCdn) return "";
-    
-    const videoPath = defaultCdn.videoPathList.find((v) => v.quality === quality) 
-      || defaultCdn.videoPathList.find((v) => v.isDefault === 1)
-      || defaultCdn.videoPathList[0];
-    
+    if (!currentEpisodeData || !defaultCdn) return "";
+
+    const videoPath =
+      defaultCdn.videoPathList.find((v) => v.quality === quality) ||
+      defaultCdn.videoPathList.find((v) => v.isDefault === 1) ||
+      defaultCdn.videoPathList[0];
+
     return videoPath?.videoPath || "";
+  };
+
+  const handleVideoEnded = () => {
+    if (!episodes) return;
+    const next = currentEpisode + 1;
+    if (next <= episodes.length - 1) {
+      handleEpisodeChange(next);
+    }
   };
 
   // Pagination
@@ -85,10 +124,6 @@ export default function Watch() {
   const startIndex = currentPage * EPISODES_PER_PAGE;
   const endIndex = Math.min(startIndex + EPISODES_PER_PAGE, episodes.length);
   const currentPageEpisodes = episodes.slice(startIndex, endIndex);
-
-  const availableQualities = currentEpisodeData?.cdnList[0]?.videoPathList
-    .filter((v) => v.isVipEquity === 0)
-    .map((v) => v.quality) || [720];
 
   return (
     <main className="min-h-screen pt-20 pb-12">
@@ -108,10 +143,12 @@ export default function Watch() {
             <div className="relative aspect-video bg-black rounded-2xl overflow-hidden shadow-2xl">
               {currentEpisodeData ? (
                 <video
+                  ref={videoRef}
                   key={`${currentEpisode}-${quality}`}
                   src={getVideoUrl()}
                   controls
                   autoPlay
+                  onEnded={handleVideoEnded}
                   className="w-full h-full"
                   poster={currentEpisodeData.chapterImg}
                 />
@@ -122,7 +159,7 @@ export default function Watch() {
               )}
 
               {/* Quality Selector */}
-              <div className="absolute top-4 right-4">
+              <div className="absolute top-4 right-4 z-20">
                 <button
                   onClick={() => setShowQualityMenu(!showQualityMenu)}
                   className="p-2 rounded-lg bg-black/60 backdrop-blur-sm hover:bg-black/80 transition-colors"
@@ -130,7 +167,7 @@ export default function Watch() {
                   <Settings className="w-5 h-5" />
                 </button>
                 {showQualityMenu && (
-                  <div className="absolute top-12 right-0 glass rounded-lg py-2 min-w-[100px] shadow-xl">
+                  <div className="absolute top-12 right-0 z-50 rounded-lg py-2 min-w-[112px] shadow-xl bg-card border border-border">
                     {availableQualities.map((q) => (
                       <button
                         key={q}
@@ -154,9 +191,7 @@ export default function Watch() {
             <div className="glass rounded-xl p-4">
               <div className="flex items-start justify-between gap-4">
                 <div>
-                  <h1 className="text-xl font-bold font-display gradient-text">
-                    {book.bookName}
-                  </h1>
+                  <h1 className="text-xl font-bold font-display gradient-text">{book.bookName}</h1>
                   <p className="text-muted-foreground mt-1">
                     {currentEpisodeData?.chapterName || `Episode ${currentEpisode + 1}`}
                   </p>
@@ -190,9 +225,7 @@ export default function Watch() {
           <div className="glass rounded-xl p-4 h-fit lg:max-h-[calc(100vh-140px)] lg:overflow-hidden flex flex-col">
             <div className="flex items-center justify-between mb-4">
               <h2 className="font-bold text-lg">Daftar Episode</h2>
-              <span className="text-sm text-muted-foreground">
-                {episodes.length} Episode
-              </span>
+              <span className="text-sm text-muted-foreground">{episodes.length} Episode</span>
             </div>
 
             {/* Pagination */}
@@ -205,16 +238,14 @@ export default function Watch() {
                 >
                   <ChevronLeft className="w-4 h-4" />
                 </button>
-                
+
                 <div className="flex items-center gap-1 flex-wrap justify-center">
                   {Array.from({ length: totalPages }, (_, i) => (
                     <button
                       key={i}
                       onClick={() => setCurrentPage(i)}
                       className={`min-w-[32px] h-8 rounded-lg text-sm font-medium transition-colors ${
-                        currentPage === i
-                          ? "bg-primary text-primary-foreground"
-                          : "bg-muted hover:bg-muted/80"
+                        currentPage === i ? "bg-primary text-primary-foreground" : "bg-muted hover:bg-muted/80"
                       }`}
                     >
                       {i + 1}
@@ -278,3 +309,4 @@ function WatchSkeleton() {
     </main>
   );
 }
+
