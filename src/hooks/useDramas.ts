@@ -1,10 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
 import type { Drama, SearchResult } from "@/types/drama";
 
-const API_BASE = "https://api.sansekai.my.id/api/dramabox";
+const PROXY_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/drama-proxy`;
 
 async function fetchDramas(endpoint: string): Promise<Drama[]> {
-  const response = await fetch(`${API_BASE}/${endpoint}`);
+  const response = await fetch(`${PROXY_URL}?endpoint=${endpoint}`);
+
   if (!response.ok) {
     throw new Error("Failed to fetch dramas");
   }
@@ -13,7 +14,9 @@ async function fetchDramas(endpoint: string): Promise<Drama[]> {
 
 async function searchDramas(query: string): Promise<SearchResult[]> {
   if (!query.trim()) return [];
-  const response = await fetch(`${API_BASE}/search?query=${encodeURIComponent(query)}`);
+
+  const response = await fetch(`${PROXY_URL}?endpoint=search&query=${encodeURIComponent(query)}`);
+
   if (!response.ok) {
     throw new Error("Failed to search dramas");
   }

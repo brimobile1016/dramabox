@@ -1,10 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
 import type { DramaDetailResponse, Episode } from "@/types/drama";
 
-const API_BASE = "https://api.sansekai.my.id/api/dramabox";
+const PROXY_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/drama-proxy`;
 
 async function fetchDramaDetail(bookId: string): Promise<DramaDetailResponse> {
-  const response = await fetch(`${API_BASE}/detail?bookId=${bookId}`);
+  const response = await fetch(`${PROXY_URL}?endpoint=detail&bookId=${bookId}`);
   if (!response.ok) {
     throw new Error("Failed to fetch drama detail");
   }
@@ -12,7 +12,7 @@ async function fetchDramaDetail(bookId: string): Promise<DramaDetailResponse> {
 }
 
 async function fetchAllEpisodes(bookId: string): Promise<Episode[]> {
-  const response = await fetch(`${API_BASE}/allepisode?bookId=${bookId}`);
+  const response = await fetch(`${PROXY_URL}?endpoint=allepisode&bookId=${bookId}`);
   if (!response.ok) {
     throw new Error("Failed to fetch episodes");
   }
