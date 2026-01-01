@@ -33,44 +33,11 @@ export default function Watch() {
     setSearchParams({ ep: index.toString() });
   };
 
-  if (detailLoading || episodesLoading) {
-    return (
-      <main className="min-h-screen pt-24 px-4">
-        <div className="max-w-7xl mx-auto flex flex-col items-center justify-center py-32">
-          <div className="relative">
-            <div className="w-20 h-20 rounded-full border-4 border-muted border-t-primary animate-spin" />
-            <div
-              className="absolute inset-0 w-20 h-20 rounded-full border-4 border-transparent border-r-secondary animate-spin"
-              style={{ animationDirection: "reverse", animationDuration: "1.5s" }}
-            />
-          </div>
-          <h2 className="text-xl font-bold text-foreground mt-8 mb-2 gradient-text">
-            Sedang Memuat Drama
-          </h2>
-          <p className="text-muted-foreground text-center max-w-md">
-            Mohon tunggu sebentar, kami sedang menyiapkan{" "}
-            {detailData?.data?.book?.chapterCount || "semua"} episode untukmu...
-          </p>
-        </div>
-      </main>
-    );
-  }
-
-  if (!detailData?.data || !episodes) {
-    return (
-      <div className="min-h-screen pt-24 px-4">
-        <div className="max-w-7xl mx-auto text-center py-20">
-          <h2 className="text-2xl font-bold text-foreground mb-4">Drama tidak ditemukan</h2>
-          <Link to="/" className="text-primary hover:underline">
-            Kembali ke beranda
-          </Link>
-        </div>
-      </div>
-    );
-  }
-
-  const { book } = detailData.data;
-  const currentEpisodeData = episodes[currentEpisode];
+  // All useMemo hooks must be called BEFORE any early returns
+  const currentEpisodeData = useMemo(() => {
+    if (!episodes) return null;
+    return episodes[currentEpisode] || null;
+  }, [episodes, currentEpisode]);
 
   const defaultCdn = useMemo(() => {
     if (!currentEpisodeData) return null;
@@ -99,6 +66,23 @@ export default function Watch() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [availableQualities.join(",")]);
 
+  // Pagination calculations
+  const totalPages = useMemo(() => {
+    if (!episodes) return 0;
+    return Math.ceil(episodes.length / EPISODES_PER_PAGE);
+  }, [episodes]);
+
+  const startIndex = currentPage * EPISODES_PER_PAGE;
+  const endIndex = useMemo(() => {
+    if (!episodes) return 0;
+    return Math.min(startIndex + EPISODES_PER_PAGE, episodes.length);
+  }, [episodes, startIndex]);
+
+  const currentPageEpisodes = useMemo(() => {
+    if (!episodes) return [];
+    return episodes.slice(startIndex, endIndex);
+  }, [episodes, startIndex, endIndex]);
+
   // Get video URL with selected quality
   const getVideoUrl = () => {
     if (!currentEpisodeData || !defaultCdn) return "";
@@ -119,11 +103,43 @@ export default function Watch() {
     }
   };
 
-  // Pagination
-  const totalPages = Math.ceil(episodes.length / EPISODES_PER_PAGE);
-  const startIndex = currentPage * EPISODES_PER_PAGE;
-  const endIndex = Math.min(startIndex + EPISODES_PER_PAGE, episodes.length);
-  const currentPageEpisodes = episodes.slice(startIndex, endIndex);
+  // Now we can have early returns AFTER all hooks
+  if (detailLoading || episodesLoading) {
+    return (
+      <main className="min-h-screen pt-24 px-4">
+        <div className="max-w-7xl mx-auto flex flex-col items-center justify-center py-32">
+          <div className="relative">
+            <div className="w-20 h-20 rounded-full border-4 border-muted border-t-primary animate-spin" />
+            <div
+              className="absolute inset-0 w-20 h-20 rounded-full border-4 border-transparent border-r-secondary animate-spin"
+              style={{ animationDirection: "reverse", animationDuration: "1.5s" }}
+            />
+          </div>
+          <h2 className="text-xl font-bold text-foreground mt-8 mb-2 gradient-text">
+            Sedang Memuat Drama
+          </h2>
+          <p className="text-muted-foreground text-center max-w-md">
+            Mohon tunggu sebentar, kami sedang menyiapkan episode untukmu...
+          </p>
+        </div>
+      </main>
+    );
+  }
+
+  if (!detailData?.data || !episodes) {
+    return (
+      <div className="min-h-screen pt-24 px-4">
+        <div className="max-w-7xl mx-auto text-center py-20">
+          <h2 className="text-2xl font-bold text-foreground mb-4">Drama tidak ditemukan</h2>
+          <Link to="/" className="text-primary hover:underline">
+            Kembali ke beranda
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  const { book } = detailData.data;
 
   return (
     <main className="min-h-screen pt-20 pb-12">
@@ -309,4 +325,3 @@ function WatchSkeleton() {
     </main>
   );
 }
-
