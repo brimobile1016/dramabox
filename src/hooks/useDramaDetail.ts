@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import type { DramaDetailResponse, Episode } from "@/types/drama";
 
-const API_BASE = "https://api.sansekai.my.id/api/dramabox";
+const API_BASE = "/api/dramabox";
 
 async function fetchDramaDetail(bookId: string): Promise<DramaDetailResponse> {
   const response = await fetch(`${API_BASE}/detail?bookId=${bookId}`);

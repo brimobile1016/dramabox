@@ -3,6 +3,12 @@ import { useParams, Link, useSearchParams } from "react-router-dom";
 import { useDramaDetail, useEpisodes } from "@/hooks/useDramaDetail";
 import { ChevronLeft, ChevronRight, Play, Loader2, Settings } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const EPISODES_PER_PAGE = 30;
 
@@ -12,7 +18,6 @@ export default function Watch() {
   const [currentEpisode, setCurrentEpisode] = useState(0);
   const [currentPage, setCurrentPage] = useState(0);
   const [quality, setQuality] = useState(720);
-  const [showQualityMenu, setShowQualityMenu] = useState(false);
   const videoRef = useRef<HTMLVideoElement | null>(null);
 
   const { data: detailData, isLoading: detailLoading } = useDramaDetail(bookId || "");
@@ -176,30 +181,27 @@ export default function Watch() {
 
               {/* Quality Selector */}
               <div className="absolute top-4 right-4 z-20">
-                <button
-                  onClick={() => setShowQualityMenu(!showQualityMenu)}
-                  className="p-2 rounded-lg bg-black/60 backdrop-blur-sm hover:bg-black/80 transition-colors"
-                >
-                  <Settings className="w-5 h-5" />
-                </button>
-                {showQualityMenu && (
-                  <div className="absolute top-12 right-0 z-50 rounded-lg py-2 min-w-[112px] shadow-xl bg-card border border-border">
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button className="p-2 rounded-lg bg-black/60 backdrop-blur-sm hover:bg-black/80 transition-colors">
+                      <Settings className="w-5 h-5" />
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent 
+                    align="end"
+                    className="max-h-[280px] overflow-y-auto"
+                  >
                     {availableQualities.map((q) => (
-                      <button
+                      <DropdownMenuItem
                         key={q}
-                        onClick={() => {
-                          setQuality(q);
-                          setShowQualityMenu(false);
-                        }}
-                        className={`w-full px-4 py-2 text-left text-sm hover:bg-muted/50 transition-colors ${
-                          quality === q ? "text-primary font-semibold" : ""
-                        }`}
+                        onClick={() => setQuality(q)}
+                        className={quality === q ? "text-primary font-semibold" : ""}
                       >
                         {q}p
-                      </button>
+                      </DropdownMenuItem>
                     ))}
-                  </div>
-                )}
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
             </div>
 
