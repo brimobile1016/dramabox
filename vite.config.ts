@@ -9,6 +9,22 @@ export default defineConfig(({ mode }) => ({
     host: "localhost",
     port: 8080,
     proxy: {
+      "/api/dramabox/detail": {
+        target: "https://api.sansekai.my.id",
+        changeOrigin: true,
+        rewrite: (path) => {
+          const bookId = path.split("/").pop();
+          return `/api/dramabox/detail?bookId=${bookId}`;
+        },
+      },
+      "/api/dramabox/allepisode": {
+        target: "https://api.sansekai.my.id",
+        changeOrigin: true,
+        rewrite: (path) => {
+          const bookId = path.split("/").pop();
+          return `/api/dramabox/allepisode?bookId=${bookId}`;
+        },
+      },
       "/api": {
         target: "https://api.sansekai.my.id",
         changeOrigin: true,
