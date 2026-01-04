@@ -2,13 +2,14 @@ import type { Metadata } from "next";
 import "@/styles/globals.css";
 import { Providers } from "@/components/providers";
 import { Header } from "@/components/Header";
+import { Footer } from "@/components/Footer";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Suspense } from "react";
 
 export const metadata: Metadata = {
-  title: "DramaBox - Streaming Drama Terbaik",
-  description: "Nonton drama Korea, China, dan Thailand dengan subtitle Indonesia. Gratis dan tanpa iklan.",
+  title: "DramaBox - Streaming Drama Pendek",
+  description: "Nonton drama pendek gratis dan tanpa iklan.",
 };
 
 export default function RootLayout({
@@ -29,6 +30,7 @@ export default function RootLayout({
             <Header />
           </Suspense>
           {children}
+          <Footer />
           <Toaster />
           <Sonner />
         </Providers>

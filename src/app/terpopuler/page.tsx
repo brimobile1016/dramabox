@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import TerpopulerContent from "./content";
+import TerpopulerContent from "./contentpopular";
 
 export const dynamic = "force-dynamic";
 
