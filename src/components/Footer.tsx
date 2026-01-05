@@ -54,7 +54,7 @@ export function Footer() {
             <ul className="space-y-2 text-sm">
               <li>
                 <a 
-                  href="https://lynk.id/sansekai/mxd6j2ezmxoe" 
+                  href="httpss://lynk.id/sansekai/mxd6j2ezmxoe" 
                   target="_blank" 
                   rel="noopener noreferrer"
                   className="text-muted-foreground hover:text-primary transition-colors inline-flex items-center gap-1"
@@ -79,7 +79,7 @@ export function Footer() {
         {/* Bottom */}
         <div className="border-t border-border/50 mt-8 pt-8">
           <p className="text-center text-sm text-muted-foreground">
-            © {new Date().getFullYear()} Made with ❤️
+            © {new Date().getFullYear()} Made with ❤️ Saipul Anuar
           </p>
         </div>
       </div>
