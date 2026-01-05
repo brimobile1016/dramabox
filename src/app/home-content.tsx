@@ -39,32 +39,43 @@ import {
   useTrendingDramas, 
   useSearchDramas 
 } from "@/hooks/useDramas";
+import { Drama } from "@/types/drama";
 
 export default function HomeContent() {
-  // Ambil semua kategori data
   const { data: forYou, isLoading: l1, error: e1 } = useForYouDramas();
   const { data: latest, isLoading: l2 } = useLatestDramas();
   const { data: trending, isLoading: l3 } = useTrendingDramas();
   const { data: sulih, isLoading: l4 } = useSearchDramas("sulih");
 
-  // Gabungkan semua data menjadi satu daftar panjang tanpa section tambahan
+  // Fungsi untuk memaksa tipe data menjadi Drama agar tidak error saat build
+  const normalizeData = (data: any): Drama[] => {
+    if (!data) return [];
+    // Ambil array dari .data jika ada, jika tidak anggap data itu sendiri array
+    const list = Array.isArray(data) ? data : (data.data || []);
+    return list as Drama[];
+  };
+
+  // Gabungkan semua data
   const allDramas = [
-    ...(forYou || []),
-    ...(latest || []),
-    ...(trending || []),
-    ...(sulih || [])
+    ...normalizeData(forYou),
+    ...normalizeData(latest),
+    ...normalizeData(trending),
+    ...normalizeData(sulih)
   ];
 
-  // Hapus duplikat agar tidak ada video yang muncul 2 kali
+  // Hapus duplikat berdasarkan bookId
   const combinedDramas = Array.from(
-    new Map(allDramas.map((item) => [item.bookId, item])).values()
+    new Map(
+      allDramas
+        .filter(item => item && item.bookId)
+        .map((item) => [item.bookId, item])
+    ).values()
   );
 
   const isLoading = l1 || l2 || l3 || l4;
 
   return (
     <main className="min-h-screen">
-      {/* Bagian ini tetap sama sesuai permintaanmu */}
       <HeroSection
         title="Untuk Kamu"
         description="Drama pilihan yang dipersonalisasi khusus untukmu. Temukan cerita seru yang sesuai selera!"
@@ -78,7 +89,7 @@ export default function HomeContent() {
           </div>
         )}
 
-        {/* DramaGrid sekarang berisi gabungan semua kategori secara otomatis */}
+        {/* Sekarang dramas={combinedDramas} tidak akan error lagi */}
         <DramaGrid dramas={combinedDramas} isLoading={isLoading} />
       </div>
     </main>
