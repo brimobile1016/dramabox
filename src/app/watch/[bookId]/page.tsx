@@ -113,6 +113,19 @@ export default function WatchPage() {
     }
   };
 
+  // Efek untuk memuat ulang video tanpa merusak status fullscreen
+useEffect(() => {
+  if (videoRef.current) {
+    // Meminta browser memuat URL baru dari getVideoUrl()
+    videoRef.current.load();
+    
+    // Mencoba memutar otomatis (diperlukan karena load() mereset status play)
+    videoRef.current.play().catch((error) => {
+      console.log("Autoplay terhambat kebijakan browser:", error);
+    });
+  }
+}, [currentEpisode, quality]); // Berjalan setiap episode atau kualitas berubah
+
   // Now we can have early returns AFTER all hooks
   if (detailLoading || episodesLoading) {
     return (
@@ -170,7 +183,7 @@ export default function WatchPage() {
               {currentEpisodeData ? (
                 <video
                   ref={videoRef}
-                  key={`${currentEpisode}-${quality}`}
+                  //key={`${currentEpisode}-${quality}`}
                   src={getVideoUrl()}
                   controls
                   autoPlay
