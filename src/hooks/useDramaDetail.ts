@@ -1,3 +1,4 @@
+/*
 import { useQuery } from "@tanstack/react-query";
 import type { DramaDetailResponse, Episode } from "@/types/drama";
 
@@ -32,6 +33,28 @@ export function useEpisodes(bookId: string) {
   return useQuery({
     queryKey: ["drama", "episodes", bookId],
     queryFn: () => fetchAllEpisodes(bookId),
+    enabled: !!bookId,
+    staleTime: 1000 * 60 * 5,
+  });
+}
+
+*/
+
+import { useQuery } from "@tanstack/react-query";
+import type { DramaDetailResponse } from "@/types/drama";
+
+const API_BASE = "/api/dramabox";
+
+async function fetchDramaDetail(bookId: string): Promise<DramaDetailResponse> {
+  const res = await fetch(`${API_BASE}/detail/${bookId}`);
+  if (!res.ok) throw new Error("Failed");
+  return res.json();
+}
+
+export function useDramaDetail(bookId: string) {
+  return useQuery<DramaDetailResponse>({
+    queryKey: ["drama", "detail", bookId],
+    queryFn: () => fetchDramaDetail(bookId),
     enabled: !!bookId,
     staleTime: 1000 * 60 * 5,
   });
