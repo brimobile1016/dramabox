@@ -1,3 +1,4 @@
+/*
 import { NextRequest, NextResponse } from "next/server";
 import { headers } from "next/headers";
 
@@ -33,6 +34,60 @@ export async function GET(
     return NextResponse.json(data);
   } catch (error) {
     console.error("API Error:", error);
+    return NextResponse.json(
+      { error: "Internal Server Error" },
+      { status: 500 }
+    );
+  }
+}
+*/
+
+import { NextRequest, NextResponse } from "next/server";
+
+const UPSTREAM_API = "https://api.sansekai.my.id/api/dramabox";
+
+export async function GET(
+  request: NextRequest,
+  { params }: { params: { bookId: string } }
+) {
+  const { bookId } = params;
+
+  /**
+   * Deteksi apakah request ini adalah:
+   * - Navigasi browser langsung (klik URL / buka tab)
+   * - Atau fetch() dari frontend / React Query
+   */
+  const fetchMode = request.headers.get("sec-fetch-mode");
+
+  // ✅ HANYA redirect jika benar-benar navigasi browser
+  if (fetchMode === "navigate") {
+    return NextResponse.redirect(
+      new URL(`/detail/${bookId}`, request.url)
+    );
+  }
+
+  // ✅ Selain itu (fetch / axios / react-query) → JSON ONLY
+  try {
+    const response = await fetch(
+      `${UPSTREAM_API}/detail?bookId=${bookId}`,
+      {
+        next: { revalidate: 300 },
+      }
+    );
+
+    if (!response.ok) {
+      return NextResponse.json(
+        { error: "Failed to fetch data" },
+        { status: response.status }
+      );
+    }
+
+    const data = await response.json();
+
+    return NextResponse.json(data);
+  } catch (error) {
+    console.error("API Error:", error);
+
     return NextResponse.json(
       { error: "Internal Server Error" },
       { status: 500 }
