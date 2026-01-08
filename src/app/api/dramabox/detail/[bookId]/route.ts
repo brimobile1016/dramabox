@@ -48,31 +48,28 @@ const UPSTREAM_API = "https://api.sansekai.my.id/api/dramabox";
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { bookId: string } }
+  { params }: { params: Promise<{ bookId: string }> }
 ) {
-  const { bookId } = params;
+  const { bookId } = await params;
 
   /**
-   * Deteksi apakah request ini adalah:
-   * - Navigasi browser langsung (klik URL / buka tab)
-   * - Atau fetch() dari frontend / React Query
+   * Deteksi apakah request ini navigasi browser langsung
+   * (BUKAN fetch / react-query)
    */
   const fetchMode = request.headers.get("sec-fetch-mode");
 
-  // ✅ HANYA redirect jika benar-benar navigasi browser
+  // ✅ Redirect HANYA jika navigasi browser
   if (fetchMode === "navigate") {
     return NextResponse.redirect(
       new URL(`/detail/${bookId}`, request.url)
     );
   }
 
-  // ✅ Selain itu (fetch / axios / react-query) → JSON ONLY
+  // ✅ Fetch API upstream (JSON ONLY)
   try {
     const response = await fetch(
       `${UPSTREAM_API}/detail?bookId=${bookId}`,
-      {
-        next: { revalidate: 300 },
-      }
+      { next: { revalidate: 300 } }
     );
 
     if (!response.ok) {
@@ -83,11 +80,9 @@ export async function GET(
     }
 
     const data = await response.json();
-
     return NextResponse.json(data);
   } catch (error) {
     console.error("API Error:", error);
-
     return NextResponse.json(
       { error: "Internal Server Error" },
       { status: 500 }
