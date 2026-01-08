@@ -52,39 +52,51 @@ export async function GET(
 ) {
   const { bookId } = await params;
 
-  /**
-   * Deteksi apakah request ini navigasi browser langsung
-   * (BUKAN fetch / react-query)
-   */
-  const fetchMode = request.headers.get("sec-fetch-mode");
-
-  // ✅ Redirect HANYA jika navigasi browser
-  if (fetchMode === "navigate") {
-    return NextResponse.redirect(
-      new URL(`/detail/${bookId}`, request.url)
-    );
-  }
-
-  // ✅ Fetch API upstream (JSON ONLY)
   try {
-    const response = await fetch(
+    const res = await fetch(
       `${UPSTREAM_API}/detail?bookId=${bookId}`,
       { next: { revalidate: 300 } }
     );
 
-    if (!response.ok) {
+    if (!res.ok) {
       return NextResponse.json(
-        { error: "Failed to fetch data" },
-        { status: response.status }
+        { success: false, message: "Failed", status: res.status },
+        { status: res.status }
       );
     }
 
-    const data = await response.json();
-    return NextResponse.json(data);
-  } catch (error) {
-    console.error("API Error:", error);
+    const book = await res.json();
+
+    // 🔥 ADAPTER: SESUAIKAN DENGAN DramaDetailResponse
+    return NextResponse.json({
+      data: {
+        book: {
+          bookId: book.bookId,
+          bookName: book.bookName,
+          cover: book.coverWap,
+          viewCount: 0,
+          followCount: 0,
+          introduction: book.introduction,
+          chapterCount: book.chapterCount,
+          labels: [],
+          tags: book.tags ?? [],
+          typeTwoNames: [],
+          typeTwoList: [],
+          language: "ID",
+          typeTwoName: "",
+          shelfTime: book.shelfTime ?? "",
+          performerList: [],
+        },
+        recommends: [],
+        chapterList: [],
+      },
+      success: true,
+      status: 200,
+      message: "OK",
+    });
+  } catch (err) {
     return NextResponse.json(
-      { error: "Internal Server Error" },
+      { success: false, message: "Internal Error", status: 500 },
       { status: 500 }
     );
   }
