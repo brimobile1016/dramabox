@@ -17,7 +17,8 @@ export default function DetailPage() {
     return <DetailSkeleton />;
   }
 
-  if (error || !data?.data) {
+//  if (error || !data?.data) {
+  if (error || !data?.bookId) {
     return (
       <div className="min-h-screen pt-24 px-4">
         <div className="max-w-7xl mx-auto text-center py-20">
@@ -30,7 +31,8 @@ export default function DetailPage() {
     );
   }
 
-  const { book } = data.data;
+//  const { book } = data.data;
+  const book = data;
 
   const formatNumber = (num: number) => {
     if (num >= 1000000) return (num / 1000000).toFixed(1) + "M";
